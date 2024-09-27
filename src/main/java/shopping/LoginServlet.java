@@ -2,6 +2,7 @@ package shopping;
 
 import java.io.IOException;
 import connect.DBConnection;
+import data.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,12 @@ public class LoginServlet extends HttpServlet {
             if (rs.next()) {
                 // Assume a method to validate password, e.g., using bcrypt for hashing
                 if (validatePassword(password, rs.getString("password"))) { // Replace with actual password hash
+                    int userId = rs.getInt("id");
+                    String userName = rs.getString("name");
+                    String userEmail = rs.getString("email");
+                    User user = new User(userId,userName,userEmail);
                     HttpSession session = request.getSession();
+                    session.setAttribute("userData", user);
                     session.setAttribute("user", rs.getString("name"));
                     session.setAttribute("user_id", rs.getInt("id")); // Store user ID if needed
                     response.sendRedirect("index.jsp");

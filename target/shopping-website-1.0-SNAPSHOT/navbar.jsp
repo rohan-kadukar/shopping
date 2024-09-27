@@ -5,6 +5,13 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <% if (session.getAttribute("user") != null) { %>
+                    <a class="nav-link" href="cart.jsp" title="Cart">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </a>
+                <% } %>
+            </li>
             <li class="nav-item dropdown">
                 <a class="nav-link" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-user-circle fa-2x"></i> <!-- Profile Icon with increased size -->
@@ -18,9 +25,6 @@
                             <i class="fas fa-user-plus"></i> Register
                         </a>
                     <% } else { %>
-                        <a class="dropdown-item" href="cart.jsp">
-                            <i class="fas fa-shopping-cart"></i> Cart
-                        </a>
                         <a class="dropdown-item" href="LogoutServlet">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>

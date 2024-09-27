@@ -14,95 +14,153 @@
 </head>
 
 <body>
-<div class="hero-section">
-    <h1>Welcome to MyShop!</h1>
-    <p>Explore our top products below!</p>
-</div>
+    <div class="hero-section text-center">
+        <h1>Welcome to MyShop!</h1>
+        <p>Explore our top products below!</p>
+    </div>
 
-<div class="product-list">
-    <%
-        Connection con = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            con = DBConnection.getConnection(); // Using the connection utility
-            stmt = con.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM products LIMIT 4");
+    <div class="container my-5">
+        <div class="row">
+            <%
+                Connection con = null;
+                Statement stmt = null;
+                ResultSet rs = null;
+                try {
+                    con = DBConnection.getConnection(); // Using the connection utility
+                    stmt = con.createStatement();
+                    rs = stmt.executeQuery("SELECT * FROM products");
 
-            // Get the current session to check login status
-//            HttpSession session = request.getSession();
-            Boolean isLoggedIn = (session.getAttribute("user") != null);
+                    // Get the current session to check login status
+                    Boolean isLoggedIn = (session.getAttribute("user") != null);
 
-            while (rs.next()) {
-    %>
-                <div class="product-item">
-                    <img src="product-images/<%= rs.getString("image") %>" alt="<%= rs.getString("name") %>" />
-                    <h3><%= rs.getString("name") %></h3>
-                    <p>Category: <%= rs.getString("category") %></p>
-                    <p>Price: $<%= rs.getDouble("price") %></p>
-                    <form action="CartServlet" method="post">
-                        <input type="hidden" name="productId" value="<%= rs.getInt("id") %>" />
-                        <%
-                            if (isLoggedIn) {
-                        %>
-                            <button type="submit" name="action" value="add">Add to Cart</button>
-                            <button type="submit" name="action" value="buy">Buy Now</button>
-                        <%
-                            } else {
-                        %>
-                            <button type="button" class="btn btn-secondary" disabled title="Please login to add to cart or buy">Login to Buy</button>
-                        <%
-                            }
-                        %>
-                    </form>
+                    while (rs.next()) {
+            %>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img class="card-img-top" src="product-images/<%= rs.getString("image")%>" alt="<%= rs.getString("name")%>" />
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <h5 class="card-title"><%= rs.getString("name")%></h5>
+                        <p class="card-text">Category: <%= rs.getString("category")%></p>
+                        <p class="card-text">Price: $<%= rs.getDouble("price")%></p>
+
+                        <% if (isLoggedIn) {%>
+                        <!-- Add to Cart Form -->
+                        <form action="CartServlet" method="post" class="mt-auto">
+                            <input type="hidden" name="productId" value="<%= rs.getInt("id")%>" />
+                            <button type="submit" name="action" value="add" class="btn btn-success btn-block">Add to Cart</button>
+                        </form>
+
+                        <!-- Buy Now Form -->
+                        <form action="DeliveryServlet" method="post" class="mt-2">
+                            <input type="hidden" name="productId" value="<%= rs.getInt("id")%>" />
+                            <button type="submit" name="action" value="buy" class="btn btn-primary btn-block">Buy Now</button>
+                        </form>
+                        <% } else { %>
+                        <!-- Disabled Button if not logged in -->
+                        <button type="button" class="btn btn-secondary btn-block" disabled title="Please login to add to cart or buy">Login to Buy</button>
+                        <% } %>
+                    </div>
                 </div>
-    <%
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) { e.printStackTrace(); }
-            if (stmt != null) try { stmt.close(); } catch (SQLException e) { e.printStackTrace(); }
-            if (con != null) try { con.close(); } catch (SQLException e) { e.printStackTrace(); }
-        }
-    %>
-</div>
+            </div>
 
-<style>
-    .hero-section {
-        text-align: center;
-        padding: 50px;
-        background-color: #f4f4f4;
-    }
-    .product-list {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-    }
-    .product-item {
-        border: 1px solid #ddd;
-        padding: 20px;
-        margin: 20px;
-        text-align: center;
-        width: 22%;
-    }
-    .product-item img {
-        width: 150px;
-        height: 150px;
-    }
-    .product-item button {
-        margin-top: 10px;
-        padding: 10px;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-    .product-item button:hover {
-        background-color: #218838;
-    }
-    .product-item .btn-secondary {
-        margin-top: 10px;
-    }
-</style>
+            <%
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (rs != null) try {
+                        rs.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    if (stmt != null) try {
+                        stmt.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    if (con != null) try {
+                        con.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            %>
+        </div>
+    </div>
+
+    <style>
+        .hero-section {
+            background-color: #007bff;
+            color: white;
+            padding: 50px 0;
+            margin-bottom: 50px;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .hero-section p {
+            font-size: 1.3rem;
+            margin-top: 10px;
+        }
+
+        .card {
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-img-top {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .card-body h5 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+
+        .card-body p {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .btn {
+            margin-top: 10px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero-section p {
+                font-size: 1rem;
+            }
+
+            .card-img-top {
+                height: 150px;
+            }
+
+            .card-body h5 {
+                font-size: 1.1rem;
+            }
+
+            .card-body p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </body>

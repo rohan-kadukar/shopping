@@ -42,7 +42,24 @@ public class CartServlet extends HttpServlet {
                 String productId = request.getParameter("productId");
                 removeFromCart(con, userId, Integer.parseInt(productId));
             } else if ("buy".equals(action)) {
-                processPurchase(con, userId);
+                String productId = request.getParameter("productId");
+                // Retrieve the quantity of the product in the cart
+                String quantityQuery = "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?";
+                try (PreparedStatement quantityStmt = con.prepareStatement(quantityQuery)) {
+                    quantityStmt.setInt(1, userId);
+                    quantityStmt.setInt(2, Integer.parseInt(productId));
+                    try (ResultSet rs = quantityStmt.executeQuery()) {
+                        if (rs.next()) {
+                            int quantity = rs.getInt("quantity");
+                            processCheckoutItem(con, userId, Integer.parseInt(productId), quantity);
+                        }
+                    }
+                }
+                response.sendRedirect("confirmation.jsp");
+                return;
+            } else if ("checkoutAll".equals(action)) {
+                // Process checkout for all items in the cart
+                processCheckoutAll(con, userId);
                 response.sendRedirect("confirmation.jsp");
                 return;
             }
@@ -109,12 +126,33 @@ public class CartServlet extends HttpServlet {
         }
     }
 
-    private void processPurchase(Connection con, int userId) throws SQLException {
-        // Clear the user's cart after purchase
-        String deleteSql = "DELETE FROM cart_items WHERE user_id = ?";
-        try (PreparedStatement deleteStmt = con.prepareStatement(deleteSql)) {
-            deleteStmt.setInt(1, userId);
-            deleteStmt.executeUpdate();
+    private void processCheckoutItem(Connection con, int userId, int productId, int quantity) throws SQLException {
+        // Insert the order into the orders table
+        String insertOrderSql = "INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)";
+        try (PreparedStatement insertOrderStmt = con.prepareStatement(insertOrderSql)) {
+            insertOrderStmt.setInt(1, userId);
+            insertOrderStmt.setInt(2, productId);
+            insertOrderStmt.setInt(3, quantity);
+            insertOrderStmt.executeUpdate();
+        }
+
+        // Remove the item from the cart
+        removeFromCart(con, userId, productId);
+    }
+
+    private void processCheckoutAll(Connection con, int userId) throws SQLException {
+        // Get all items from the cart for this user
+        String selectCartSql = "SELECT product_id, quantity FROM cart_items WHERE user_id = ?";
+        try (PreparedStatement selectStmt = con.prepareStatement(selectCartSql)) {
+            selectStmt.setInt(1, userId);
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                while (rs.next()) {
+                    int productId = rs.getInt("product_id");
+                    int quantity = rs.getInt("quantity");
+                    // Insert each item into the orders table
+                    processCheckoutItem(con, userId, productId, quantity);
+                }
+            }
         }
     }
 }

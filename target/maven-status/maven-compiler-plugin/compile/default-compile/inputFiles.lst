@@ -1,9 +1,14 @@
+E:\Code\Java Project\shopping-website\src\main\java\data\CartItem.java
+E:\Code\Java Project\shopping-website\src\main\java\data\Product.java
+E:\Code\Java Project\shopping-website\src\main\java\shopping\PaymentServlet.java
+E:\Code\Java Project\shopping-website\src\main\java\connect\DBConnection.java
+E:\Code\Java Project\shopping-website\src\main\java\data\User.java
+E:\Code\Java Project\shopping-website\src\main\java\shopping\LogoutServlet.java
 E:\Code\Java Project\shopping-website\src\main\java\shopping\CartServlet.java
 E:\Code\Java Project\shopping-website\src\main\java\shopping\RegisterServlet.java
 E:\Code\Java Project\shopping-website\src\main\java\shopping\AppContextListener.java
 E:\Code\Java Project\shopping-website\src\main\java\shopping\LoginServlet.java
-E:\Code\Java Project\shopping-website\src\main\java\shopping\PaymentServlet.java
 E:\Code\Java Project\shopping-website\src\main\java\shopping\resources\JakartaEE10Resource.java
-E:\Code\Java Project\shopping-website\src\main\java\connect\DBConnection.java
+E:\Code\Java Project\shopping-website\src\main\java\shopping\ChangePasswordServlet.java
 E:\Code\Java Project\shopping-website\src\main\java\shopping\JakartaRestConfiguration.java
-E:\Code\Java Project\shopping-website\src\main\java\shopping\LogoutServlet.java
+E:\Code\Java Project\shopping-website\src\main\java\shopping\ForgotPasswordServlet.java

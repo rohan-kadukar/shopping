@@ -51,8 +51,9 @@
                         </form>
 
                         <!-- Buy Now Form -->
-                        <form action="DeliveryServlet" method="post" class="mt-2">
+                        <form action="CartServlet" method="post" class="mt-2">
                             <input type="hidden" name="productId" value="<%= rs.getInt("id")%>" />
+                            <input type="hidden" name="quantity" value="1" /> <!-- Adjust this if you want to handle quantities -->
                             <button type="submit" name="action" value="buy" class="btn btn-primary btn-block">Buy Now</button>
                         </form>
                         <% } else { %>

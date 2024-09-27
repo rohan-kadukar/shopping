@@ -50,6 +50,9 @@
         .options a:hover {
             text-decoration: underline;
         }
+        .alert {
+            margin-top: 20px;
+        }
     </style>
     <script>
         function validateLogin() {
@@ -78,6 +81,19 @@
                 <h2>Welcome Back!</h2>
                 <p>Please login to your account</p>
             </div>
+
+            <% 
+            // Check for error messages
+            String errorMessage = (String) request.getAttribute("errorMessage");
+            if (errorMessage != null) {
+            %>
+                <div class="alert alert-danger" role="alert">
+                    <%= errorMessage %>
+                </div>
+            <% 
+            } 
+            %>
+
             <form action="LoginServlet" method="post" onsubmit="return validateLogin();">
                 <div class="form-group">
                     <label for="email">Email:</label>

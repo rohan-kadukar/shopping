@@ -1,9 +1,14 @@
 shopping\RegisterServlet.class
 connect\DBConnection.class
+data\Product.class
 shopping\AppContextListener.class
-shopping\LogoutServlet.class
-shopping\CartServlet.class
+shopping\ForgotPasswordServlet.class
 shopping\JakartaRestConfiguration.class
 shopping\PaymentServlet.class
 shopping\LoginServlet.class
 shopping\resources\JakartaEE10Resource.class
+shopping\ChangePasswordServlet.class
+shopping\LogoutServlet.class
+data\User.class
+shopping\CartServlet.class
+data\CartItem.class

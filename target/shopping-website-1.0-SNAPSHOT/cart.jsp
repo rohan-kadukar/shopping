@@ -1,7 +1,6 @@
 <%@ page import="java.sql.*, java.util.*" %>
 <%@ page import="connect.DBConnection" %>
 <%@ page import="jakarta.servlet.http.HttpSession" %>
-<%@ page import="jakarta.servlet.jsp.JspWriter" %>
 
 <html>
     <head>
@@ -23,12 +22,10 @@
                 background-color: white;
                 margin-bottom: 15px;
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-                transition: transform 0.2s ease-in-out;
             }
             .cart-image {
                 width: 100%;
                 height: auto;
-                object-fit: cover;
                 border-radius: 8px;
             }
             .btn-container {
@@ -43,12 +40,6 @@
                 margin-top: 20px;
                 text-align: right;
             }
-            .alert {
-                border-radius: 10px; /* Rounded corners */
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            }
-
-
         </style>
     </head>
     <body>
@@ -59,7 +50,6 @@
 
             <%
                 Integer userId = (Integer) session.getAttribute("user_id");
-
                 if (userId == null) {
                     out.println("<p>You are not logged in. Please <a href='login.jsp'>login</a> to see your cart.</p>");
                 } else {
@@ -71,8 +61,7 @@
                     try {
                         con = DBConnection.getConnection();
                         String sql = "SELECT products.id, products.name, products.price, products.image, cart_items.quantity "
-                                + "FROM cart_items "
-                                + "JOIN products ON cart_items.product_id = products.id "
+                                + "FROM cart_items JOIN products ON cart_items.product_id = products.id "
                                 + "WHERE cart_items.user_id = ?";
                         stmt = con.prepareStatement(sql);
                         stmt.setInt(1, userId);
@@ -80,12 +69,9 @@
 
                         if (!rs.isBeforeFirst()) {
                             out.println("<div class='alert alert-warning text-center mt-4' role='alert'>"
-                                    + "<h4 class='alert-heading'>Your Cart is Empty!</h4>"
-                                    + "<p>It seems you have not added any items to your cart yet.</p>"
-                                    + "<hr>"
-                                    + "<p class='mb-0'>Browse our <a href='index.jsp' class='alert-link'>products</a> to find something you love!</p>"
+                                    + "<h4>Your Cart is Empty!</h4>"
+                                    + "<p>Add some items from our <a href='index.jsp' class='alert-link'>product selection</a>!</p>"
                                     + "</div>");
-
                         } else {
                             while (rs.next()) {
                                 String productId = rs.getString("id");
@@ -96,24 +82,25 @@
                                 double itemTotalPrice = productPrice * quantity;
                                 totalPrice += itemTotalPrice;
             %>
-            <div class="cart-item row align-items-center mb-3 p-3 border rounded bg-white shadow-sm">
+            <div class="cart-item row align-items-center mb-3 p-3">
                 <div class="col-4 col-md-2">
                     <img src="product-images/<%= productImage%>" alt="<%= productName%>" class="cart-image img-fluid"/>
                 </div>
-                <div class="col-8 col-md-10 cart-item-details">
+                <div class="col-8 col-md-10">
                     <h5><%= productName%></h5>
                     <p>Qty: <%= quantity%></p>
                     <p>Price: $<%= productPrice%> each</p>
                     <p><strong>Total: $<%= itemTotalPrice%></strong></p>
                     <div class="btn-container">
-                        <form action="CartServlet" method="post" class="d-inline">
+                        <form action="CartServlet" method="post">
                             <input type="hidden" name="action" value="remove">
                             <input type="hidden" name="productId" value="<%= productId%>">
                             <button type="submit" class="btn btn-danger">Remove</button>
                         </form>
-                        <form action="CartServlet" method="post" class="d-inline">
-                            <input type="hidden" name="action" value="buy">
+                        <form action="PaymentServlet" method="post">
                             <input type="hidden" name="productId" value="<%= productId%>">
+                            <input type="hidden" name="quantity" value="<%= quantity%>">
+                            <input type="hidden" name="action" value="checkout">
                             <button type="submit" class="btn btn-primary">Checkout</button>
                         </form>
                     </div>
@@ -122,9 +109,9 @@
             <%
                 }
             %>
-            <div class="summary text-right">
+            <div class="summary">
                 <h4>Total Amount: $<%= totalPrice%></h4>
-                <form action="CartServlet" method="post" class="d-inline">
+                <form action="CartServlet" method="post">
                     <input type="hidden" name="action" value="checkoutAll">
                     <button type="submit" class="btn btn-success">Checkout All</button>
                 </form>
@@ -154,6 +141,5 @@
                 }
             %>
         </div>
-
     </body>
 </html>

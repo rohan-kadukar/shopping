@@ -26,7 +26,6 @@ public class CartServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         Integer userId = (Integer) session.getAttribute("user_id");
 
-        // If the user is not logged in, redirect to the login page
         if (userId == null) {
             response.sendRedirect("login.jsp");
             return;
@@ -41,35 +40,38 @@ public class CartServlet extends HttpServlet {
             } else if ("remove".equals(action)) {
                 String productId = request.getParameter("productId");
                 removeFromCart(con, userId, Integer.parseInt(productId));
-            } else if ("buy".equals(action)) {
-                String productId = request.getParameter("productId");
-                // Retrieve the quantity of the product in the cart
-                String quantityQuery = "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?";
-                try (PreparedStatement quantityStmt = con.prepareStatement(quantityQuery)) {
-                    quantityStmt.setInt(1, userId);
-                    quantityStmt.setInt(2, Integer.parseInt(productId));
-                    try (ResultSet rs = quantityStmt.executeQuery()) {
-                        if (rs.next()) {
-                            int quantity = rs.getInt("quantity");
-                            processCheckoutItem(con, userId, Integer.parseInt(productId), quantity);
+            } else if ("buy".equals(action) || "checkoutAll".equals(action)) {
+                double totalPrice = 0;
+                if ("buy".equals(action)) {
+                    String productId = request.getParameter("productId");
+                    // Retrieve quantity and calculate totalPrice
+                    String quantityQuery = "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?";
+                    try (PreparedStatement quantityStmt = con.prepareStatement(quantityQuery)) {
+                        quantityStmt.setInt(1, userId);
+                        quantityStmt.setInt(2, Integer.parseInt(productId));
+                        try (ResultSet rs = quantityStmt.executeQuery()) {
+                            if (rs.next()) {
+                                int quantity = rs.getInt("quantity");
+                                totalPrice = getTotalPrice(con, Integer.parseInt(productId), quantity);
+                            }
                         }
                     }
+                    request.setAttribute("totalPrice", totalPrice);
+                } else {
+                    // Handle checkoutAll, calculate total price of all items in the cart
+                    totalPrice = getTotalPriceForAll(con, userId);
+                    request.setAttribute("totalPrice", totalPrice);
                 }
-                response.sendRedirect("confirmation.jsp");
-                return;
-            } else if ("checkoutAll".equals(action)) {
-                // Process checkout for all items in the cart
-                processCheckoutAll(con, userId);
-                response.sendRedirect("confirmation.jsp");
+                request.getRequestDispatcher("paymentOptions.jsp").forward(request, response);
                 return;
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "SQL error while processing the cart", e);
-            response.sendRedirect("error.jsp"); // Redirect to a generic error page
+            response.sendRedirect("error.jsp");
             return;
         } catch (ClassNotFoundException ex) {
             LOGGER.log(Level.SEVERE, "DB Connection class not found", ex);
-            response.sendRedirect("error.jsp"); // Redirect to a generic error page
+            response.sendRedirect("error.jsp");
             return;
         }
 
@@ -126,33 +128,62 @@ public class CartServlet extends HttpServlet {
         }
     }
 
-    private void processCheckoutItem(Connection con, int userId, int productId, int quantity) throws SQLException {
-        // Insert the order into the orders table
-        String insertOrderSql = "INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)";
-        try (PreparedStatement insertOrderStmt = con.prepareStatement(insertOrderSql)) {
-            insertOrderStmt.setInt(1, userId);
-            insertOrderStmt.setInt(2, productId);
-            insertOrderStmt.setInt(3, quantity);
-            insertOrderStmt.executeUpdate();
-        }
+//    private void processCheckoutItem(Connection con, int userId, int productId, int quantity) throws SQLException {
+//        // Insert the order into the orders table
+//        String insertOrderSql = "INSERT INTO orders (user_id, product_id, quantity) VALUES (?, ?, ?)";
+//        try (PreparedStatement insertOrderStmt = con.prepareStatement(insertOrderSql)) {
+//            insertOrderStmt.setInt(1, userId);
+//            insertOrderStmt.setInt(2, productId);
+//            insertOrderStmt.setInt(3, quantity);
+//            insertOrderStmt.executeUpdate();
+//        }
+//
+//        // Remove the item from the cart
+//        removeFromCart(con, userId, productId);
+//    }
 
-        // Remove the item from the cart
-        removeFromCart(con, userId, productId);
-    }
+//    private void processCheckoutAll(Connection con, int userId) throws SQLException {
+//        // Get all items from the cart for this user
+//        String selectCartSql = "SELECT product_id, quantity FROM cart_items WHERE user_id = ?";
+//        try (PreparedStatement selectStmt = con.prepareStatement(selectCartSql)) {
+//            selectStmt.setInt(1, userId);
+//            try (ResultSet rs = selectStmt.executeQuery()) {
+//                while (rs.next()) {
+//                    int productId = rs.getInt("product_id");
+//                    int quantity = rs.getInt("quantity");
+//                    // Insert each item into the orders table
+//                    processCheckoutItem(con, userId, productId, quantity);
+//                }
+//            }
+//        }
+//    }
+    
+// Helper methods to calculate total prices
 
-    private void processCheckoutAll(Connection con, int userId) throws SQLException {
-        // Get all items from the cart for this user
-        String selectCartSql = "SELECT product_id, quantity FROM cart_items WHERE user_id = ?";
-        try (PreparedStatement selectStmt = con.prepareStatement(selectCartSql)) {
-            selectStmt.setInt(1, userId);
-            try (ResultSet rs = selectStmt.executeQuery()) {
-                while (rs.next()) {
-                    int productId = rs.getInt("product_id");
-                    int quantity = rs.getInt("quantity");
-                    // Insert each item into the orders table
-                    processCheckoutItem(con, userId, productId, quantity);
+    private double getTotalPrice(Connection con, int productId, int quantity) throws SQLException {
+        String sql = "SELECT price FROM products WHERE id = ?";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setInt(1, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("price") * quantity;
                 }
             }
         }
+        return 0;
+    }
+
+    private double getTotalPriceForAll(Connection con, int userId) throws SQLException {
+        double total = 0;
+        String sql = "SELECT products.price, cart_items.quantity FROM cart_items JOIN products ON cart_items.product_id = products.id WHERE cart_items.user_id = ?";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    total += rs.getDouble("price") * rs.getInt("quantity");
+                }
+            }
+        }
+        return total;
     }
 }
